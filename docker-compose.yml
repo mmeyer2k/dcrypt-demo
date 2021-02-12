@@ -1,0 +1,20 @@
+version: "3.7"
+services:
+  phpfpm:
+    build:
+      context: .
+      dockerfile: Dockerfile.phpfpm
+    volumes:
+      - ./www:/www
+  nginx:
+    image: nginx
+    ports:
+      - 127.0.0.1:4488:80
+    volumes:
+      - ./www:/www
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+  composer:
+    image: composer:1.9
+    command: ["composer", "install"]
+    volumes:
+      - ./www:/app

@@ -1,0 +1,4 @@
+FROM php:7.4-fpm
+
+RUN apt update && apt install -y libgmp-dev
+RUN docker-php-ext-install gmp

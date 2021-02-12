@@ -1,0 +1,7 @@
+{
+    "require": {
+        "mmeyer2k/dcrypt": "^13.1",
+        "tuupola/base32": "^2.0",
+        "tuupola/base62": "^2.1"
+    }
+}

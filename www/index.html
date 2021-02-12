@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Dcrypt Web Demo</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+              integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w=="
+              crossorigin="anonymous"/>
+        <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
+        <style>
+            textarea, #passwd {
+                font-family: monospace;
+            }
+            #result {
+                resize: none;
+            }
+        </style>
+        <script>
+            function refreshPasswdCheck() {
+                let passwd = $("#passwd").val();
+
+                if (passwd.length >= 44) {
+                    $("#passwdcheck").addClass("has-text-success");
+                } else {
+                    $("#passwdcheck").removeClass("has-text-success");
+                }
+            }
+
+            function encdec() {
+                $.ajax({
+                    type: "POST",
+                    url: '/encryption.php',
+                    data: $("form").serialize(),
+                    statusCode: {
+                        404: function (data) {
+                            alert("wtf?!");
+                        },
+                        403: function (data) {
+
+                        },
+                        200: function (data, status, request) {
+                            $("#passwd").val(request.getResponseHeader('passwd'));
+                            $("#result").val(data);
+                            $("#copyResult").removeAttr('disabled');
+
+                            refreshPasswdCheck();
+                        }
+                    },
+                    dataType: "text"
+                });
+            }
+
+            $(document).ready(function () {
+                new ClipboardJS('.clip');
+
+                $("#secret").mouseup(function () {
+                    $("#result").css('height', $(this).css('height'))
+                });
+
+                $("#passwd").keyup(function () {
+                    refreshPasswdCheck();
+                });
+
+                $("#dec").click(function () {
+                    $("#encdec").val('decrypt');
+                    encdec();
+                });
+
+                $("#enc").click(function () {
+                    $("#encdec").val('encrypt');
+                    encdec();
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <section class="section">
+            <div class="container">
+                <h1 class="title">
+                    Dcrypt Web Demo
+                </h1>
+                <p class="subtitle">
+                    Encrypt and decrypt raw data with <strong>Dcrypt</strong>!
+                </p>
+                <p class="subtitle">
+                    Since processing happens <strong>server side</strong>, please do not submit sensitive information.
+                    This is just a toy!
+                </p>
+                <form>
+                    <input type="hidden" name="encdec" value="encrypt" id="encdec">
+                    <div class="columns">
+                        <div class="column">
+                            <div class="select">
+                                <select name="encode">
+                                    <option value="hex">hex</option>
+                                    <option value="base32">base32</option>
+                                    <option value="base62" selected>base62</option>
+                                    <option value="base64">base64</option>
+                                </select>
+                            </div>
+                            <div class="select">
+                                <select name="cipher">
+                                    <option value="aes-256-cbc">aes-256-cbc</option>
+                                    <option value="aes-256-ctr">aes-256-ctr</option>
+                                    <option value="aes-256-ecb">aes-256-ecb</option>
+                                    <option value="aes-256-gcm" selected>aes-256-gcm</option>
+                                    <option value="aes-256-ofb">aes-256-ofb</option>
+                                </select>
+                            </div>
+                            <div class="select">
+                                <select name="hashal">
+                                    <option value="sha3-224">sha3-224</option>
+                                    <option value="sha3-256" selected>sha3-256</option>
+                                    <option value="sha3-384">sha3-384</option>
+                                    <option value="sha3-512">sha3-512</option>
+                                    <option value="whirlpool">whirlpool</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <button class="button clip"
+                                    type="button"
+                                    id="copyResult"
+                                    data-clipboard-target="#result"
+                                    disabled>
+                                <span class="icon">
+                                    <i class="fas fa-clipboard"></i>
+                                </span>
+                                <span>
+                                    Copy result to clipboard
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="columns">
+                        <div class="column">
+                            <textarea id="secret"
+                                      class="textarea"
+                                      name="secret"
+                                      placeholder="Data to encrypt..."></textarea>
+                        </div>
+                        <div class="column">
+                            <textarea id="result" class="textarea" placeholder="" disabled></textarea>
+                        </div>
+                    </div>
+
+                    <div class="columns">
+                        <div class="column is-four-fifths">
+                            <div class="control has-icons-left has-icons-right">
+                                <input class="input"
+                                       type="text"
+                                       id="passwd"
+                                       name="passwd"
+                                       title="Provide a 256 bit password encoded with base64, or clear field to generate new."
+                                       placeholder="Input encryption key or leave blank to generate random key">
+                                <span class="icon is-left">
+                                    <i class="fas fa-key"></i>
+                                </span>
+                                <span class="icon is-right" id="passwdcheck">
+                                    <i class="fas fa-check"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <button class="button is-fullwidth clip"
+                                    type="button"
+                                    data-clipboard-target="#passwd"
+                                    id="copypasswd">
+                                <span class="icon">
+                                    <i class="fas fa-clipboard"></i>
+                                </span>
+                                <span>
+                                    Copy to clipboard
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="columns">
+                    <div class="column">
+                        <button class="button" id="enc" type="button">
+                        <span class="icon">
+                          <i class="fas fa-lock"></i>
+                        </span>
+                            <span>Encrypt</span>
+                        </button>
+                        <button class="button" id="dec" type="button">
+                        <span class="icon">
+                          <i class="fas fa-unlock"></i>
+                        </span>
+                            <span>Decrypt</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="section">
+            <div class="container">
+                <h3 class="title">Open Source Shout Out</h3>
+                <p class="subtitle">
+                    Special thanks to the open source community that helped make this page possible!
+                </p>
+                <ul>
+                    <li><a target="_blank" href="https://github.com/mmeyer2k/dcrypt">mmeyer2k/dcrypt</a></li>
+                    <li><a target="_blank" href="https://github.com/tuupola/base32">tuupola/base32</a></li>
+                    <li><a target="_blank" href="https://github.com/tuupola/base62">tuupola/base62</a></li>
+                    <li><a target="_blank" href="https://github.com/jgthms/bulma">jgthms/bulma</a></li>
+                </ul>
+            </div>
+        </section>
+    </body>
+</html>
