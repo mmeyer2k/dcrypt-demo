@@ -8,8 +8,6 @@ services:
       - ./www:/www
   nginx:
     image: nginx
-    networks:
-      - webproxy
     ports:
       - 127.0.0.1:4488:80
     volumes:
@@ -20,8 +18,3 @@ services:
     command: ["composer", "install"]
     volumes:
       - ./www:/app
-
-networks:
-  webproxy:
-    external: true
-    name: webproxy
