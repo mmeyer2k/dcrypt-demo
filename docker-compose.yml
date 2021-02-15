@@ -4,11 +4,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.phpfpm
+    networks:
+      - default
     volumes:
       - ./www:/www
   nginx:
     image: nginx
     networks:
+      - default
       - webproxy
     ports:
       - 127.0.0.1:4488:80
@@ -22,6 +25,7 @@ services:
       - ./www:/app
 
 networks:
+  default:
+    driver: bridge
   webproxy:
-    external: true
-    name: webproxy
+    external: false
